@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 환경 변수
+.env
+
+# OS/Editor
+.DS_Store
+.vscode/

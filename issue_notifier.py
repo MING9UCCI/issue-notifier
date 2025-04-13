@@ -1,7 +1,7 @@
 import requests
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 import threading
 
@@ -26,6 +26,9 @@ REPOS = {
 # 이미 감지한 이슈 추적
 seen_issue_ids = set()
 
+# 서버 실행 시 기준 시각 (UTC)
+base_time = datetime.now(timezone.utc)
+
 # 루프 종료 여부
 running = True
 
@@ -41,14 +44,14 @@ def send_to_discord(lang: str, issue: dict):
     # 생성 시각 (KST)
     created_at = issue.get("created_at")
     if created_at:
-        created_at_dt = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%SZ")
+        created_at_dt = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
         kst_time = created_at_dt + timedelta(hours=9)
         created_at_str = kst_time.strftime("%Y-%m-%d %H:%M KST")
     else:
         created_at_str = "알 수 없음"
 
     # 알림 시각 (KST)
-    sent_at_str = (datetime.utcnow() + timedelta(hours=9)).strftime("%Y-%m-%d %H:%M:%S KST")
+    sent_at_str = (datetime.now(timezone.utc) + timedelta(hours=9)).strftime("%Y-%m-%d %H:%M:%S KST")
 
     # 라벨 목록
     labels = [label["name"] for label in issue.get("labels", [])]
@@ -115,8 +118,15 @@ def check_issues(repo: str, lang: str):
         for issue in issues:
             if "pull_request" in issue:
                 continue
+
+            # 생성 시각 확인
+            created_at = datetime.strptime(issue["created_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            if created_at <= base_time:
+                continue  # 서버 시작 전 이슈는 무시
+
             if issue["id"] not in seen_issue_ids:
                 seen_issue_ids.add(issue["id"])
+                print(f"[NEW] {repo}에서 새 이슈 발견: #{issue['number']} - {issue['title']}")
                 send_to_discord(lang, issue)
     else:
         print(f"[ERROR] {repo} 이슈 확인 실패: {response.status_code}")
@@ -124,7 +134,9 @@ def check_issues(repo: str, lang: str):
 
 def watcher_loop():
     global running
-    print(f"[START] GitHub 이슈 감시 시작: {datetime.now()}")
+    start_time_str = (datetime.now(timezone.utc) + timedelta(hours=9)).strftime("%Y-%m-%d %H:%M:%S KST")
+    print(f"[START] GitHub 이슈 감시 시작: {start_time_str}")
+
     while running:
         for repo, lang in REPOS.items():
             check_issues(repo, lang)

@@ -1,14 +1,26 @@
-# 오픈소스 프로젝트 이슈 알리미
+# 오픈소스 프로젝트 이슈 알리미 🔔
+GitHub 저장소에 새로운 이슈가 등록되면 디스코드 Webhook으로 알림을 보내는 Python 기반 감시 봇입니다.
 
-## 설치
+
+## 사용 방법
 ```bash
 pip install -r requirements.txt
 ```
 
-## 실행법
+
+## .env 파일 생성
 ```bash
-python issue_notifier.py
+.env
 ```
 
-## 기타
-디스코드 서버에 추가 되어있으면 디스코드 웹훅을 이용하여 새로운 이슈가 올라올 시 자동으로 알림이 옵니다.
+
+### → 안에 Webhook 주소와 GitHub 토큰을 채워주세요
+예시
+```bash
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/xxx/yyy
+GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+
+## 실행
+python issue_notifier.py

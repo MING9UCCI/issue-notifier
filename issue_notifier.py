@@ -3,7 +3,6 @@ import os
 import time
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
-import threading
 
 # .env 불러오기
 load_dotenv()
@@ -28,9 +27,6 @@ seen_issue_ids = set()
 
 # 서버 실행 시 기준 시각 (UTC)
 base_time = datetime.now(timezone.utc)
-
-# 루프 종료 여부
-running = True
 
 
 def send_to_discord(lang: str, issue: dict):
@@ -133,29 +129,15 @@ def check_issues(repo: str, lang: str):
 
 
 def watcher_loop():
-    global running
     start_time_str = (datetime.now(timezone.utc) + timedelta(hours=9)).strftime("%Y-%m-%d %H:%M:%S KST")
     print(f"[START] GitHub 이슈 감시 시작: {start_time_str}")
 
-    while running:
+    while True:
         for repo, lang in REPOS.items():
             check_issues(repo, lang)
         time.sleep(60)
 
 
-def input_listener():
-    global running
-    while True:
-        command = input().strip().lower()
-        if command in ["quit", "exit"]:
-            print("[STOP] 프로그램 종료 중...")
-            running = False
-            break
-
-
 if __name__ == "__main__":
-    watcher_thread = threading.Thread(target=watcher_loop)
-    watcher_thread.start()
-    input_listener()
-    watcher_thread.join()
-    print("[DONE] 종료 완료.")
+    print("[MODE] Server (non-interactive) 실행 중")
+    watcher_loop()

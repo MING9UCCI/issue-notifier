@@ -17,9 +17,9 @@ HEADERS = {
 
 # 감시할 외부 레포
 REPOS = {
-    "MING9UCCI/issue-notifier": "Python"
-    # "oss2025hnu/reposcore-py": "Python",
-    # "oss2025hnu/reposcore-js": "JavaScript"
+    "MING9UCCI/issue-notifier": "Python",
+    "oss2025hnu/reposcore-py": "Python",
+    "oss2025hnu/reposcore-js": "JavaScript"
 }
 
 # 이미 감지한 이슈 추적
@@ -27,6 +27,17 @@ seen_issue_ids = set()
 
 # 서버 실행 시 기준 시각 (UTC)
 base_time = datetime.now(timezone.utc)
+
+# 📄 로그 출력 함수
+def log(message: str, level: str = "INFO"):
+    now = (datetime.now(timezone.utc) + timedelta(hours=9)).strftime("%Y-%m-%d %H:%M:%S")
+    tag = {
+        "INFO": "ℹ️",
+        "NEW": "🆕",
+        "ERROR": "❌",
+        "START": "🚀"
+    }.get(level.upper(), "🔹")
+    print(f"[{now}] {tag} [{level.upper()}] {message}")
 
 
 def send_to_discord(lang: str, issue: dict):
@@ -102,7 +113,7 @@ def send_to_discord(lang: str, issue: dict):
 
     response = requests.post(DISCORD_WEBHOOK_URL, json=payload)
     if response.status_code != 204:
-        print(f"[ERROR] 디스코드 전송 실패: {response.status_code} - {response.text}")
+        log(f"디스코드 전송 실패: {response.status_code} - {response.text}", "ERROR")
 
 
 def check_issues(repo: str, lang: str):
@@ -122,16 +133,14 @@ def check_issues(repo: str, lang: str):
 
             if issue["id"] not in seen_issue_ids:
                 seen_issue_ids.add(issue["id"])
-                print(f"[NEW] {repo}에서 새 이슈 발견: #{issue['number']} - {issue['title']}")
+                log(f"{repo}에서 새 이슈 발견: #{issue['number']} - {issue['title']}", "NEW")
                 send_to_discord(lang, issue)
     else:
-        print(f"[ERROR] {repo} 이슈 확인 실패: {response.status_code}")
+        log(f"{repo} 이슈 확인 실패: {response.status_code}", "ERROR")
 
 
 def watcher_loop():
-    start_time_str = (datetime.now(timezone.utc) + timedelta(hours=9)).strftime("%Y-%m-%d %H:%M:%S KST")
-    print(f"[START] GitHub 이슈 감시 시작: {start_time_str}")
-
+    log("GitHub 이슈 감시 시작", "START")
     while True:
         for repo, lang in REPOS.items():
             check_issues(repo, lang)
@@ -139,5 +148,5 @@ def watcher_loop():
 
 
 if __name__ == "__main__":
-    print("[MODE] Server (non-interactive) 실행 중")
+    log("Server (non-interactive) 모드 실행 중", "INFO")
     watcher_loop()

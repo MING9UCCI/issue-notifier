@@ -20,7 +20,7 @@ REPOS = {
     "MING9UCCI/issue-notifier": "Python",
     "oss2025hnu/reposcore-py": "Python",
     "oss2025hnu/reposcore-js": "JavaScript",
-    "oss2025hnu/reposcore-cs": "C#"
+    #"oss2025hnu/reposcore-cs": "C#"
 }
 
 # 이미 감지한 이슈 추적

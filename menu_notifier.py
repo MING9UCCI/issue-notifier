@@ -32,9 +32,9 @@ def fetch_dormitory_menu():
 
         for item in data:
             if item.get("SIKSA_GB") == "2":  # 점심
-                lunch = item.get("MENU_NM", "메뉴 없음").strip().replace("\n", ", ")
+                lunch = item.get("MENU_NM", "메뉴 없음").strip().replace("\n", "\n- ")
             elif item.get("SIKSA_GB") == "3":  # 저녁
-                dinner = item.get("MENU_NM", "메뉴 없음").strip().replace("\n", ", ")
+                dinner = item.get("MENU_NM", "메뉴 없음").strip().replace("\n", "\n- ")
 
         return lunch, dinner
 
@@ -50,11 +50,19 @@ def send_menu_to_discord(meal_type, menu):
     title = "점심 메뉴" if meal_type == "lunch" else "저녁 메뉴"
     now = datetime.now(KST).strftime("%Y-%m-%d %H:%M")
 
+    # 색상 코드: 점심(연파랑) / 저녁(연주황)
+    color = 0x5dade2 if meal_type == "lunch" else 0xf5b041
+
     embed = {
-        "title": f"{emoji} 오늘의 기숙사 {title}",
-        "description": menu,
-        "color": 0x5dade2,
-        "footer": {"text": f"알림 시각: {now}"}
+        "title": f"{emoji} 오늘의 {title}",
+        "description": f"**📅 날짜:** {now}\n\n**🍽️ 메뉴 목록:**\n- {menu}",
+        "color": color,
+        "footer": {
+            "text": "Hannam University Dormitory"
+        },
+        "thumbnail": {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Hannam_University_logo.svg/1200px-Hannam_University_logo.svg.png"
+        }
     }
 
     payload = {"embeds": [embed]}

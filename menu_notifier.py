@@ -64,4 +64,4 @@ def send_menu_to_discord(meal_type, menu):
 
 def schedule_menu_notifications():
     schedule.every().day.at("11:00").do(lambda: send_menu_to_discord("lunch", fetch_dormitory_menu()[0]))
-    schedule.every().day.at("17:00").do(lambda: send_menu_to_discord("dinner", fetch_dormitory_menu()[1]))
+    schedule.every().day.at("13:12").do(lambda: send_menu_to_discord("dinner", fetch_dormitory_menu()[1]))

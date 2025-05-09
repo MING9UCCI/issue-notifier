@@ -1,5 +1,5 @@
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import os
 import schedule
 from dotenv import load_dotenv
@@ -11,9 +11,12 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 load_dotenv()
 MENU_WEBHOOK_URL = os.getenv("DISCORD_MENU_WEBHOOK_URL")
 
+# 한국 시간대 설정
+KST = timezone(timedelta(hours=9))
+
 def fetch_dormitory_menu():
     url = "https://my.hnu.kr/api/widget/internalWidget/selectSikdan"
-    date = datetime.now().strftime("%Y%m%d")
+    date = datetime.now(KST).strftime("%Y%m%d")
     params = {
         "SIKDAN_DT": date,
         "SIKDANG_GB": "1"  # 생활관 식당
@@ -45,10 +48,10 @@ def send_menu_to_discord(meal_type, menu):
 
     emoji = "🍱" if meal_type == "lunch" else "🍽️"
     title = "점심 메뉴" if meal_type == "lunch" else "저녁 메뉴"
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    now = datetime.now(KST).strftime("%Y-%m-%d %H:%M")
 
     embed = {
-        "title": f"{emoji} 오늘의 {title}",
+        "title": f"{emoji} 오늘의 기숙사 {title}",
         "description": menu,
         "color": 0x5dade2,
         "footer": {"text": f"알림 시각: {now}"}
@@ -63,5 +66,6 @@ def send_menu_to_discord(meal_type, menu):
         print(f"[INFO] {title} 전송 성공!")
 
 def schedule_menu_notifications():
-    schedule.every().day.at("11:00").do(lambda: send_menu_to_discord("lunch", fetch_dormitory_menu()[0]))
-    schedule.every().day.at("13:12").do(lambda: send_menu_to_discord("dinner", fetch_dormitory_menu()[1]))
+    # 한국 시간(KST) 기준으로 점심/저녁 알림 설정
+    schedule.every().day.at("02:00").do(lambda: send_menu_to_discord("lunch", fetch_dormitory_menu()[0]))  # 11:00 KST
+    schedule.every().day.at("08:00").do(lambda: send_menu_to_discord("dinner", fetch_dormitory_menu()[1]))  # 17:00 KST

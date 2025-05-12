@@ -7,7 +7,9 @@ from dotenv import load_dotenv
 # .env 불러오기
 load_dotenv()
 
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_ISSUE_WEBHOOK_URL")
+DISCORD_PY_WEBHOOK_URL = os.getenv("DISCORD_PY_WEBHOOK_URL")
+DISCORD_JS_WEBHOOK_URL = os.getenv("DISCORD_JS_WEBHOOK_URL")
+DISCORD_CS_WEBHOOK_URL = os.getenv("DISCORD_CS_WEBHOOK_URL")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 HEADERS = {
@@ -20,7 +22,7 @@ REPOS = {
     "MING9UCCI/issue-notifier": "Python",
     "oss2025hnu/reposcore-py": "Python",
     "oss2025hnu/reposcore-js": "JavaScript",
-    #"oss2025hnu/reposcore-cs": "C#"
+    "oss2025hnu/reposcore-cs": "C#"
 }
 
 # 이미 감지한 이슈 추적
@@ -49,6 +51,12 @@ def send_to_discord(lang: str, issue: dict):
     avatar_url = issue["user"]["avatar_url"]
     repo_name = issue["repository_url"].split("/")[-1]
 
+    webhook_url = {
+        "Python": DISCORD_PY_WEBHOOK_URL,
+        "JavaScript": DISCORD_JS_WEBHOOK_URL,
+        "C#": DISCORD_CS_WEBHOOK_URL
+    }.get(lang)
+
     created_at = issue.get("created_at")
     if created_at:
         created_at_dt = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
@@ -73,42 +81,17 @@ def send_to_discord(lang: str, issue: dict):
             "url": avatar_url
         },
         "fields": [
-            {
-                "name": "작성자",
-                "value": author,
-                "inline": True
-            },
-            {
-                "name": "작성 시각",
-                "value": created_at_str,
-                "inline": True
-            },
-            {
-                "name": "📎 라벨",
-                "value": label_text,
-                "inline": False
-            },
-            {
-                "name": "📄 본문 요약",
-                "value": body_preview,
-                "inline": False
-            },
-            {
-                "name": "🔗 링크",
-                "value": f"[이슈 바로가기]({issue_url})",
-                "inline": False
-            }
+            {"name": "작성자", "value": author, "inline": True},
+            {"name": "작성 시각", "value": created_at_str, "inline": True},
+            {"name": "📎 라벨", "value": label_text, "inline": False},
+            {"name": "📄 본문 요약", "value": body_preview, "inline": False},
+            {"name": "🔗 링크", "value": f"[이슈 바로가기]({issue_url})", "inline": False}
         ],
-        "footer": {
-            "text": f"알림 시각: {sent_at_str}"
-        }
+        "footer": {"text": f"알림 시각: {sent_at_str}"}
     }
 
-    payload = {
-        "embeds": [embed]
-    }
-
-    response = requests.post(DISCORD_WEBHOOK_URL, json=payload)
+    payload = {"embeds": [embed]}
+    response = requests.post(webhook_url, json=payload)
     if response.status_code != 204:
         log(f"디스코드 전송 실패: {response.status_code} - {response.text}", "ERROR")
 
@@ -123,11 +106,9 @@ def check_github_issues():
             for issue in issues:
                 if "pull_request" in issue:
                     continue
-
                 created_at = datetime.strptime(issue["created_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
                 if created_at <= base_time:
                     continue
-
                 if issue["id"] not in seen_issue_ids:
                     seen_issue_ids.add(issue["id"])
                     log(f"{repo}에서 새 이슈 발견: #{issue['number']} - {issue['title']}", "NEW")
@@ -140,7 +121,7 @@ def run_issue_watcher():
     log("GitHub 이슈 감시 시작", "START")
     while True:
         check_github_issues()
-        time.sleep(60)  # 1분마다 확인
+        time.sleep(60)
 
 
 if __name__ == "__main__":

@@ -75,5 +75,5 @@ def send_menu_to_discord(meal_type, menu):
 
 def schedule_menu_notifications():
     # 한국 시간(KST) 기준으로 점심/저녁 알림 설정
-    schedule.every().day.at("02:00").do(lambda: send_menu_to_discord("lunch", fetch_dormitory_menu()[0]))  # 11:00 KST
-    schedule.every().day.at("08:00").do(lambda: send_menu_to_discord("dinner", fetch_dormitory_menu()[1]))  # 17:00 KST
+    schedule.every().day.at("01:30").do(lambda: send_menu_to_discord("lunch", fetch_dormitory_menu()[0]))  # 10:30 KST
+    schedule.every().day.at("07:30").do(lambda: send_menu_to_discord("dinner", fetch_dormitory_menu()[1]))  # 16:30 KST

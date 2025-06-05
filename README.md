@@ -24,3 +24,7 @@ GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxx
 
 ## 실행
 python issue_notifier.py
+
+
+## 돌리는 환경
+Deploy env : Railway
